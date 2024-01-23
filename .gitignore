@@ -1,0 +1,5 @@
+# Ignore specific files and directories
+.idea/
+.ipynb_checkpoints/
+*.iml
+cat_image.jpg
