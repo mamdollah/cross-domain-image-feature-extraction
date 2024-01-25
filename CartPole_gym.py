@@ -1,8 +1,11 @@
 import gymnasium as gym
 import time
 
-env = gym.make("CartPole-v1", render_mode="rgb_array")
 
+
+env = gym.make("CartPole-v1", render_mode="human")
+
+# Testing
 episodes = 10
 
 for episode in range(1, episodes+1):
@@ -12,7 +15,7 @@ for episode in range(1, episodes+1):
 
     while not finished:
         frame = env.render()
-        print(frame.shape)
+
 
         time.sleep(0.01)  # Add a small delay to slow down rendering
         action = env.action_space.sample()
