@@ -3,3 +3,7 @@
 .ipynb_checkpoints/
 *.iml
 cat_image.jpg
+
+logs/
+
+*.zip
