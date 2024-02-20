@@ -7,3 +7,5 @@ cat_image.jpg
 logs/
 
 *.zip
+
+__pycache__/
