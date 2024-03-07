@@ -2,9 +2,9 @@
 .idea/
 .ipynb_checkpoints/
 *.iml
-cat_image.jpg
+feature_extraction/cat_image.jpg
 
-logs/
+sb3/atari/logs/
 
 *.zip
 
