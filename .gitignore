@@ -4,7 +4,7 @@
 *.iml
 feature_extraction/cat_image.jpg
 
-sb3/atari/logs/
+sb3/experiments/atari/logs/
 
 *.zip
 
