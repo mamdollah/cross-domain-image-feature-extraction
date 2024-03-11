@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from transformers import ResNetConfig, ResNetModel, AutoImageProcessor
 
 
+
 class FeatureExtractor(ABC):
     def __init__(self, model_name: str):
         super().__init__()
@@ -22,6 +23,7 @@ class FeatureExtractor(ABC):
         if model_name not in allowed_model_names:
             raise ValueError(f"model_name '{model_name}' is not supported. Please choose from {allowed_model_names}")
 
+        # Load the ResNet model and image processor
         config = ResNetConfig.from_pretrained(model_name, output_hidden_states=True)
         self.model = ResNetModel.from_pretrained(model_name, config=config)  # Assuming this is a PyTorch model
         self.image_processor = AutoImageProcessor.from_pretrained(model_name)
