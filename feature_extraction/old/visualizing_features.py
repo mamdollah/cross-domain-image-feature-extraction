@@ -22,7 +22,7 @@ resnet50.layer4.register_forward_hook(hook)
 
 
 # Input image
-input_image_path = "../images/shapes.png"
+input_image_path = "../../images/shapes.png"
 input_image = Image.open(input_image_path).convert("RGB")
 preprocess = transforms.Compose([
     transforms.Resize((224, 224)),
