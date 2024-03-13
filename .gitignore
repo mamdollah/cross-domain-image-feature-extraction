@@ -4,7 +4,9 @@
 *.iml
 images/cat_image.jpg
 
-experiments/atari/old/logs/
+logs/
+
+wandb/
 
 *.zip
 
