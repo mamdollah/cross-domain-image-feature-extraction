@@ -180,9 +180,6 @@ tensorflow==2.15.0.post1
 tensorflow-estimator==2.15.0
 tensorflow-io-gcs-filesystem==0.35.0
 tensorflow-probability==0.23.0
-tensorrt==8.6.1.post1
-tensorrt-bindings==8.6.1
-tensorrt-libs==8.6.1
 termcolor==2.4.0
 terminado==0.18.0
 tf-agents==0.19.0
