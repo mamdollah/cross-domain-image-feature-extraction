@@ -5,16 +5,15 @@ from torchvision import models
 from torchvision.transforms import transforms
 
 
-
 class BlockFeatureExtractor(nn.Module, BaseFeatureExtractor):
-    def __init__(self, model, num_blocks=0):
+    def __init__(self, model, num_stages=0):
         # super(BlockFeatureExtractor, self).__init__()
         nn.Module.__init__(self)
-        self.num_blocks = num_blocks
+        self.num_stages = num_stages
 
         # just for torchinfo.summary to show correct model architecture
         self.Conv2d, self.BatchNorm2d, self.ReLU, self.MaxPool2d = list(model.children())[:4]
-        self.stages = self.get_features()
+        self.stages = self._get_block_features()
         self.stage1, self.stage2, self.stage3, self.stage4 = self.stages
 
         self.adaptive_avg_pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -38,7 +37,7 @@ class BlockFeatureExtractor(nn.Module, BaseFeatureExtractor):
         ])
         return image_processor(image)
 
-    def get_features(self):
+    def _get_block_features(self):
         seqs = [None] * 4
         sequentials = nn.Sequential(*list(model.children())[4:-6+self.num_stages])
         last_stage_blocks = list(sequentials[-1].children())
