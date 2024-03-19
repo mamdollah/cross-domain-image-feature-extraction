@@ -1,6 +1,6 @@
 import time
 from stable_baselines3.common.base_class import BaseAlgorithm
-from gym import Env
+from gymnasium import Env
 
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -10,6 +10,27 @@ import numpy as np
 
 from stable_baselines3.common import type_aliases
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, VecMonitor, is_vecenv_wrapped
+from typing import Callable
+
+
+def linear_schedule(initial_value):
+    """
+    Linear learning rate schedule.
+    :param initial_value: (float or str)
+    :return: (function)
+    """
+    if isinstance(initial_value, str):
+        initial_value = float(initial_value)
+
+    def func(progress):
+        """
+        Progress will decrease from 1 (beginning) to 0
+        :param progress: (float)
+        :return: (float)
+        """
+        return progress * initial_value
+
+    return func
 
 def render_env_with_model(env: Union[Env, VecEnv], model: BaseAlgorithm, num_steps: int = 1000, fps: int = 30) -> None:
     """
