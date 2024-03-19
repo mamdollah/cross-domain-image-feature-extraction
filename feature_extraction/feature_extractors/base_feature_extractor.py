@@ -4,11 +4,10 @@ from abc import ABC, abstractmethod
 class BaseFeatureExtractor(ABC):
     def __init__(self):
         super().__init__()
-        self.adaptive_avg_pool = nn.AdaptiveAvgPool2d((1, 1))  # Pooling layer to reduce dimensions
 
     @property
     @abstractmethod
-    def image_processor(self):
+    def process_image(self):
         """Subclasses should provide their own image processor."""
         pass
 
@@ -25,5 +24,6 @@ class BaseFeatureExtractor(ABC):
 
     def reduce_dim(self, features):
         """Reduce the dimensionality of the features using average pooling."""
-        reduced_features = self.adaptive_avg_pool(features)
+        adaptive_avg_pool = nn.AdaptiveAvgPool2d((1, 1))  # Pooling layer to reduce dimensions
+        reduced_features = adaptive_avg_pool(features)
         return reduced_features.view(features.size(0), -1)
