@@ -5,7 +5,7 @@ import torch
 import gymnasium as gym
 from PIL import Image
 
-from feature_extractor import FeatureExtractor
+from base_feature_extractor import FeatureExtractor
 
 class StageFeatureExtractor(FeatureExtractor):
     def __init__(self, model_name: str, stage: int):

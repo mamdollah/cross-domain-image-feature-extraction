@@ -6,22 +6,9 @@ from transformers import ResNetConfig, ResNetModel, AutoImageProcessor
 
 
 
-class FeatureExtractor(ABC):
+class BaseFeatureExtractor(ABC):
     def __init__(self, model_name: str):
         super().__init__()
-        # List of allowed model names
-        allowed_model_names = [
-            "microsoft/resnet-18",
-            "microsoft/resnet-26",
-            "microsoft/resnet-34",
-            "microsoft/resnet-50",
-            "microsoft/resnet-101",
-            "microsoft/resnet-152"
-        ]
-
-        # Check if the provided model_name is in the list of allowed model names
-        if model_name not in allowed_model_names:
-            raise ValueError(f"model_name '{model_name}' is not supported. Please choose from {allowed_model_names}")
 
         # Load the ResNet model and image processor
         config = ResNetConfig.from_pretrained(model_name, output_hidden_states=True)

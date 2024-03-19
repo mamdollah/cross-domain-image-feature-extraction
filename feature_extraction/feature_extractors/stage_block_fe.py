@@ -4,7 +4,7 @@ from torchinfo import torchinfo
 from torchvision import models
 from torchvision.transforms import transforms
 
-from feature_extraction.feature_extractors.feature_extractor import FeatureExtractor
+from feature_extraction.feature_extractors.base_feature_extractor import FeatureExtractor
 
 
 class BlockFeatureExtractor(nn.Module, BaseFeatureExtractor):
