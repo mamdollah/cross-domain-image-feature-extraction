@@ -2,7 +2,7 @@
 .idea/
 .ipynb_checkpoints/
 *.iml
-images/cat_image.jpg
+tests/images/cat_image.jpg
 
 logs/
 
