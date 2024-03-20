@@ -1,5 +1,7 @@
 import gymnasium as gym
 
+from feature_extraction.feature_extractors.base_feature_extractor import BaseFeatureExtractor
+
 
 class FeatureExtractionObservationWrapper(gym.ObservationWrapper):
     def __init__(self, env, feature_extractor: BaseFeatureExtractor):
