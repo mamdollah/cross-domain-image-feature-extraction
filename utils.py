@@ -35,6 +35,7 @@ def linear_schedule(initial_value):
 def render_env_with_model(env: Union[Env, VecEnv], model: BaseAlgorithm, num_steps: int = 1000, fps: int = 30) -> None:
     """
     Render interactions of a model with an environment, supporting both vectorized and non-vectorized environments.
+    This is basically a copy of the `evaluate_policy` function from stable-baselines3, but with working rendering.
 
     :param env: The environment for rendering interactions (can be vectorized or non-vectorized).
     :param model: The model used for predicting actions.
