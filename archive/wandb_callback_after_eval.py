@@ -2,7 +2,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 import wandb
 
 
-class WandbEvalCallback(BaseCallback):
+class WandbCallbackAfterEval(BaseCallback):
     """
     Callback for logging the mean evaluation reward to Weights & Biases (wandb).
 
@@ -16,6 +16,7 @@ class WandbEvalCallback(BaseCallback):
         Logs the mean_reward to wandb with the current number of timesteps as the step.
         """
         mean_reward = self.parent.last_mean_reward  # Access the mean reward from EvalCallback
-        wandb.log({"eval/mean_reward": mean_reward}, step=self.num_timesteps)  # Log to wandb
+
+        wandb.log({"eval/mean_reward": mean_reward})
 
         return True
