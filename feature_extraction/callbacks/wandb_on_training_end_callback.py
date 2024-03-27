@@ -70,7 +70,7 @@ class WandbOnTrainingEndCallback(BaseCallback):
         directly as an HTML object for detailed analysis.
         """
         # Generate model summary
-        model_summary = summary(self.model, input_size=(1, 4, 84, 84))
+        model_summary = summary(self.model.policy, input_size=(1, 4, 84, 84))
         print("Model Summary:", model_summary)
 
         # Convert the summary to HTML string (basic conversion)
@@ -88,6 +88,7 @@ class WandbOnTrainingEndCallback(BaseCallback):
         final_model_path = f"{self.log_dir}/final_model.zip"
         onnx_model_path = f"{self.log_dir}/model.onnx"
         evaluations_path = f"{self.log_dir}/evaluations.npz"
+        best_model_path = f"{self.log_dir}/best_model.zip"
 
         # Save the final model locally
         self.model.save(final_model_path)
@@ -104,14 +105,15 @@ class WandbOnTrainingEndCallback(BaseCallback):
         print("Evaluating model...")
         self.evaluate_model()
         print("Model evaluation done.")
-        print("Recording best model...")
-        self.record_best_model()
-        print("Recording best model done.")
+        #print("Recording best model...")
+        #self.record_best_model()
+        #print("Recording best model done.")
         print("Logging model architecture...")
         self.log_model_architecture()
         print("Model architecture logged.")
 
         print("Uploading files to W&B...")
+        wandb.save(best_model_path, policy="end")
         # Use wandb_run for saving files to W&B
         wandb.save(final_model_path, policy="end")
         # Assumes EvalCallback has already saved the evaluations to a file
