@@ -17,10 +17,7 @@ class BlockFeatureExtractor(BaseResnetFeatureExtractor):
             else:
                 sequentials[i] = nn.Sequential(*list(stage.children())[:self.num_blocks - block_count])
                 break
-        # print(sequentials)
         return sequentials
-
-
 
 if __name__ == "__main__":
     # pass
@@ -28,5 +25,6 @@ if __name__ == "__main__":
     import torch
     model = models.resnet50(weights='DEFAULT')
     rand_input = torch.rand(1, 3, 224, 224)
-    bfe = BlockFeatureExtractor(model, num_blocks=2)
+    bfe = BlockFeatureExtractor(model, num_blocks=16)
     print(bfe.extract_features(rand_input).shape)
+

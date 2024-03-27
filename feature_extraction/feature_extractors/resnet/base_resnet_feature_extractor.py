@@ -13,6 +13,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         self.stem, self.stages = self._split_model()
         self.sequentials = self._get_features()
         self._configure_model()
+        self.model = None
 
     def _split_model(self):
         children = list(self.model.children())
@@ -54,11 +55,13 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
             x = layer(x)
         return x
 
+    @staticmethod
+    def reduce_dim(features):
+        return nn.AdaptiveAvgPool2d((1, 1))(features).view(features.size(0), -1)
+
     def extract_features(self, image):
         processed_image = self.process_image(image)
         feature_embeddings = self.forward(processed_image)
         reduced_dim = self.reduce_dim(feature_embeddings)
         return reduced_dim
 
-    def reduce_dim(self, features):
-        return nn.AdaptiveAvgPool2d((1, 1))(features).view(features.size(0), -1)

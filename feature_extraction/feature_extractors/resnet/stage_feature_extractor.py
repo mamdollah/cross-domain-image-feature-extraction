@@ -9,16 +9,15 @@ class StageFeatureExtractor(BaseResnetFeatureExtractor):
         super().__init__(model)
 
     def _get_features(self):
-        stages = [self.stages[i] if i < self.num_stages else None for i in range(len(self.stages))]
-        return stages
+        return self.stages[:self.num_stages] + [None] * (4 - self.num_stages)
 
 
 
 if __name__ == "__main__":
-    pass
-    # import torchvision.models as models
-    # import torch
-    # model = models.resnet50(weights='DEFAULT')
-    # rand_input = torch.rand(1, 3, 224, 224)
-    # bfe = StageFeatureExtractor(model, num_stages=1)
-    # print(bfe.extract_features(rand_input).shape)
+    # pass
+    import torchvision.models as models
+    import torch
+    model = models.resnet50(weights='DEFAULT')
+    rand_input = torch.rand(1, 3, 224, 224)
+    bfe = StageFeatureExtractor(model, num_stages=2)
+    print(bfe.extract_features(rand_input).shape)
