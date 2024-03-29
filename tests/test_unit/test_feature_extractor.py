@@ -11,7 +11,7 @@ from feature_extraction.feature_extractors.resnet.block_feature_extractor import
 from feature_extraction.feature_extractors.resnet.stage_feature_extractor import StageFeatureExtractor
 
 
-def custom_resnet(model, stages=1, blocks=3, **kwargs):
+def custom_resnet(pretrained_model, stages=1, blocks=3, **kwargs):
     if stages < 1 or stages > 4 or not isinstance(stages, int):
         raise ValueError("Number of stages must be between 1 and 4.")
     if blocks < 1 or blocks > 6 or not isinstance(blocks, int):
@@ -31,23 +31,22 @@ def custom_resnet(model, stages=1, blocks=3, **kwargs):
         layers[stages][stages - 1] = blocks
 
     # Create the model with the specified stages
-    model = models.resnet.ResNet(models.resnet.Bottleneck, layers[stages], **kwargs)
-    model.fc = nn.Identity()
+    custom_model = models.resnet.ResNet(models.resnet.Bottleneck, layers[stages], **kwargs)
+    custom_model.fc = nn.Identity()
 
     # Remove extra stages if needed
     if stages < 4:
-        model.layer4 = nn.Identity()
+        custom_model.layer4 = nn.Identity()
         if stages < 3:
-            model.layer3 = nn.Identity()
+            custom_model.layer3 = nn.Identity()
             if stages < 2:
-                model.layer2 = nn.Identity()
+                custom_model.layer2 = nn.Identity()
 
     # Load pre-trained weights from torchvision
-    pretrained_model = model
     pretrained_state_dict = pretrained_model.state_dict()
-    model.load_state_dict(pretrained_state_dict, strict=False)
+    custom_model.load_state_dict(pretrained_state_dict, strict=False)
 
-    return model
+    return custom_model
 
 class TestFeatureExtractors(unittest.TestCase):
     def setUp(self):
@@ -56,20 +55,24 @@ class TestFeatureExtractors(unittest.TestCase):
         self.dummy_input = torch.rand(1, 3, 224, 224)
         self.model = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
         self.stage_model = custom_resnet(self.model)
+        self.processed_input = StageFeatureExtractor.process_image(self.dummy_input)
 
 
     def test_stage_feature_extractor(self):
         stage_extractor = StageFeatureExtractor(self.model, num_stages=self.num_stage)
         output = stage_extractor.extract_features(self.dummy_input)
-        custom_resnet_output = self.stage_model(self.dummy_input).detach().numpy()
+        custom_resnet_output = self.stage_model.forward(self.processed_input).detach().numpy()
+
         self.assertEqual(output.shape, custom_resnet_output.shape)
         np.testing.assert_allclose(output, custom_resnet_output, rtol=1e-5, atol=1e-5)
 
     def test_stage_equal_block(self, stage=1, block=3):
         block_extractor = BlockFeatureExtractor(self.model, num_blocks=block)
         stage_extractor = StageFeatureExtractor(self.model, num_stages=stage)
+
         stage_output = stage_extractor.extract_features(self.dummy_input)
         block_output = block_extractor.extract_features(self.dummy_input)
+
         self.assertEqual(block_output.shape, stage_output.shape)
         np.testing.assert_allclose(block_output, stage_output, rtol=1e-5, atol=1e-5)
 

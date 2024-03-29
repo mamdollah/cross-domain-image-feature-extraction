@@ -11,17 +11,12 @@ from feature_extraction.feature_extractors.base_feature_extractor import BaseFea
 class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
     def __init__(self, model):
         super().__init__()
-        children = list(model.children())
-        self.stem, self.stages = children[:4], children[4:8]
-        # self.stem, self.stages = self._split_model()
-        self.sequentials = self._get_features()
+        self.model = model
+        self.freeze_params()
 
-
-    # def _split_model(self):
-    #     children = list(self.model.children())
-    #     stem, stages = children[:4], children[4:8]
-    #     return stem, stages
-
+    def freeze_params(self):
+        for param in self.parameters():
+            param.requires_grad = False
 
     @property
     def output_dim(self):
@@ -37,24 +32,12 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         ])
         return image_processor(image)
 
-    @abstractmethod
-    def _get_features(self):
-        pass
-
-    def stem_forward(self, x):
-        with torch.no_grad():
-            for layer in self.stem:
-                x = layer(x)
-        return x
-
     def forward(self, x):
         with torch.no_grad():
-            x = self.stem_forward(x)
-            for seq in self.sequentials:
-                if seq:
-                    x = seq(x)
+            for layer in self.model:
+                if layer:
+                    x = layer(x)
         return x
-
 
     @staticmethod
     def reduce_dim(features):
@@ -65,5 +48,4 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         feature_embeddings = self.forward(processed_image)
         reduced_dim = self.reduce_dim(feature_embeddings)
         return reduced_dim
-
 
