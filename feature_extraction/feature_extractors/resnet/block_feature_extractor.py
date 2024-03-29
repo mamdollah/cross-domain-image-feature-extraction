@@ -22,9 +22,11 @@ class BlockFeatureExtractor(BaseResnetFeatureExtractor):
 if __name__ == "__main__":
     # pass
     import torchvision.models as models
+    import torchinfo
     import torch
     model = models.resnet50(weights='DEFAULT')
     rand_input = torch.rand(1, 3, 224, 224)
     bfe = BlockFeatureExtractor(model, num_blocks=16)
     print(bfe.extract_features(rand_input).shape)
+    torchinfo.summary(bfe)
 

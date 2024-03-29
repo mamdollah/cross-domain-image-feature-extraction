@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from abc import abstractmethod
+
+from torchinfo import torchinfo
 from torchvision.transforms import transforms
 
 from feature_extraction.feature_extractors.base_feature_extractor import BaseFeatureExtractor
@@ -9,20 +11,17 @@ from feature_extraction.feature_extractors.base_feature_extractor import BaseFea
 class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
     def __init__(self, model):
         super().__init__()
-        self.model = model
-        self.stem, self.stages = self._split_model()
+        children = list(model.children())
+        self.stem, self.stages = children[:4], children[4:8]
+        # self.stem, self.stages = self._split_model()
         self.sequentials = self._get_features()
-        self._configure_model()
-        self.model = None
 
-    def _split_model(self):
-        children = list(self.model.children())
-        stem, stages = children[:4], children[4:8]
-        return stem, stages
 
-    def _configure_model(self):
-        for param in self.parameters():
-            param.requires_grad = False
+    # def _split_model(self):
+    #     children = list(self.model.children())
+    #     stem, stages = children[:4], children[4:8]
+    #     return stem, stages
+
 
     @property
     def output_dim(self):
@@ -42,6 +41,12 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
     def _get_features(self):
         pass
 
+    def stem_forward(self, x):
+        with torch.no_grad():
+            for layer in self.stem:
+                x = layer(x)
+        return x
+
     def forward(self, x):
         with torch.no_grad():
             x = self.stem_forward(x)
@@ -50,10 +55,6 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
                     x = seq(x)
         return x
 
-    def stem_forward(self, x):
-        for layer in self.stem:
-            x = layer(x)
-        return x
 
     @staticmethod
     def reduce_dim(features):
@@ -64,4 +65,5 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         feature_embeddings = self.forward(processed_image)
         reduced_dim = self.reduce_dim(feature_embeddings)
         return reduced_dim
+
 
