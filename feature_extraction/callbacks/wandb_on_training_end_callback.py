@@ -17,6 +17,8 @@ class WandbOnTrainingEndCallback(BaseCallback):
         self.log_dir = log_dir
         self.n_eval_episodes = n_eval_episodes
         self.record_n_episodes = record_n_episodes
+        self.dummy_input = torch.randn(1, 4, 84, 84)  # Example input format
+
 
     def record_best_model(self):
         """
@@ -70,7 +72,7 @@ class WandbOnTrainingEndCallback(BaseCallback):
         directly as an HTML object for detailed analysis.
         """
         # Generate model summary
-        model_summary = summary(self.model.policy, input_size=(1, 4, 84, 84))
+        model_summary = summary(self.model.policy, input_data=self.dummy_input)
         print("Model Summary:", model_summary)
 
         # Convert the summary to HTML string (basic conversion)
@@ -94,6 +96,7 @@ class WandbOnTrainingEndCallback(BaseCallback):
         self.model.save(final_model_path)
 
         # Convert the model to ONNX format
+        # Dummy input should be changed based for block runs
         dummy_input = torch.randn(1, 4, 84, 84)  # Example input format
         torch.onnx.export(self.model.policy,  # Model's policy to export
                           dummy_input,  # Example input for the model
@@ -105,18 +108,14 @@ class WandbOnTrainingEndCallback(BaseCallback):
         print("Evaluating model...")
         self.evaluate_model()
         print("Model evaluation done.")
-        #print("Recording best model...")
-        #self.record_best_model()
-        #print("Recording best model done.")
         print("Logging model architecture...")
         self.log_model_architecture()
         print("Model architecture logged.")
 
         print("Uploading files to W&B...")
-        wandb.save(best_model_path, policy="end")
-        # Use wandb_run for saving files to W&B
-        wandb.save(final_model_path, policy="end")
-        # Assumes EvalCallback has already saved the evaluations to a file
-        wandb.save(evaluations_path, policy="end")
-        wandb.save(onnx_model_path, policy="end")
+        # Assumes EvalCallback has already run
+        wandb.save(best_model_path)
+        wandb.save(final_model_path)
+        wandb.save(evaluations_path)
+        wandb.save(onnx_model_path)
         print("Files uploaded to W&B.")

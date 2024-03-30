@@ -1,5 +1,7 @@
+import numpy as np
 import torch.nn as nn
 from feature_extraction.feature_extractors.resnet.base_resnet_feature_extractor import BaseResnetFeatureExtractor
+
 
 class BlockFeatureExtractor(BaseResnetFeatureExtractor):
     def __init__(self, model, num_blocks=3):
@@ -8,9 +10,22 @@ class BlockFeatureExtractor(BaseResnetFeatureExtractor):
 
         children = list(model.children())
         blocks_per_stage = [len(list(stage.children())) for stage in children[4:8]]
-        num_stage = next((i+1 for i, blocks in enumerate(blocks_per_stage) if sum(blocks_per_stage[:i+1]) >= num_blocks), None)
+        num_stage = next(
+            (i + 1 for i, blocks in enumerate(blocks_per_stage) if sum(blocks_per_stage[:i + 1]) >= num_blocks), None)
 
-        model = children[:4+num_stage]
+        model = children[:4 + num_stage]
         model[-1] = model[-1][:num_blocks]
 
         super().__init__(model)
+
+if __name__ == "__main__":
+    from torchvision.models import resnet18, resnet50, ResNet50_Weights
+
+    model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+    feature_extractor = BlockFeatureExtractor(model, 1)
+
+    dummy_array_rand = np.random.rand(1, 84, 84)
+
+    print(feature_extractor.output_dim)
+
+

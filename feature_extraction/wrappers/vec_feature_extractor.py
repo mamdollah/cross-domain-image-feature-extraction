@@ -20,9 +20,9 @@ class VecFeatureExtractor(VecEnvWrapper):
     def __init__(self, venv: VecEnv, feature_extractor: BaseFeatureExtractor):
         super(VecFeatureExtractor, self).__init__(venv)
         self.feature_extractor = feature_extractor
-        # Assuming the feature extractor has a method to determine the output space,
-        # and it's already suitable for VecEnv (batched observations).
-        self.observation_space = feature_extractor.output_dim
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=feature_extractor.output_dim, dtype=np.float32
+        )
 
     def reset(self) -> np.ndarray:
         """
@@ -31,6 +31,7 @@ class VecFeatureExtractor(VecEnvWrapper):
         Returns:
             The initial observations after preprocessing.
         """
+        print("VecFeatureExtractor reset")
         obs = self.venv.reset()
         return self.observation(obs)
 

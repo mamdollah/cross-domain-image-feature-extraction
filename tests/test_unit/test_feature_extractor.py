@@ -52,16 +52,15 @@ class TestFeatureExtractors(unittest.TestCase):
     def setUp(self):
         self.num_stage = 1
         self.num_blocks = 3
-        self.dummy_input = torch.rand(1, 3, 224, 224)
+        self.dummy_input = np.random.rand(1, 84, 84)
         self.model = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
         self.stage_model = custom_resnet(self.model)
-        self.processed_input = StageFeatureExtractor.process_image(self.dummy_input)
 
 
     def test_stage_feature_extractor(self):
         stage_extractor = StageFeatureExtractor(self.model, num_stages=self.num_stage)
         output = stage_extractor.extract_features(self.dummy_input)
-        custom_resnet_output = self.stage_model.forward(self.processed_input).detach().numpy()
+        custom_resnet_output = self.stage_model.forward(stage_extractor.process_image(self.dummy_input)).detach().numpy()
 
         self.assertEqual(output.shape, custom_resnet_output.shape)
         np.testing.assert_allclose(output, custom_resnet_output, rtol=1e-5, atol=1e-5)
@@ -79,8 +78,6 @@ class TestFeatureExtractors(unittest.TestCase):
     def test_stages_blocks_equal(self):
         for stage, block in zip(range(1, 5), [3, 7, 13, 16]):
             self.test_stage_equal_block(stage, block)
-
-
 
 
 if __name__ == '__main__':
