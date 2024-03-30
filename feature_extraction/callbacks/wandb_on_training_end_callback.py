@@ -114,8 +114,8 @@ class WandbOnTrainingEndCallback(BaseCallback):
 
         print("Uploading files to W&B...")
         # Assumes EvalCallback has already run
-        wandb.save(best_model_path)
-        wandb.save(final_model_path)
-        wandb.save(evaluations_path)
-        wandb.save(onnx_model_path)
+        wandb.save(best_model_path, policy="end")
+        wandb.save(final_model_path, policy="end")
+        wandb.save(evaluations_path, policy="end")
+        wandb.save(onnx_model_path, policy="end")
         print("Files uploaded to W&B.")
