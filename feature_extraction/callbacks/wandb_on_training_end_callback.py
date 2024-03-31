@@ -17,7 +17,10 @@ class WandbOnTrainingEndCallback(BaseCallback):
         self.log_dir = log_dir
         self.n_eval_episodes = n_eval_episodes
         self.record_n_episodes = record_n_episodes
-        self.dummy_input = torch.randn(1, 4, 84, 84)  # Example input format
+        #self.dummy_input = torch.randn(1, 4, 84, 84)  # Example input format # For benchmark
+        #self.dummy_input = torch.randn(4, 256) # Block 1, 1 stack # For block
+        self.dummy_input = torch.randn((1,) + model.observation_space.shape) # For feature extraction
+        #print("Dummy input shape:", self.dummy_input.shape)
 
 
     def record_best_model(self):
@@ -35,6 +38,8 @@ class WandbOnTrainingEndCallback(BaseCallback):
                                      record_video_trigger=lambda x: True, # Start recording immediately
                                      video_length=2_000,  # Ensures all episodes are recorded
                                      name_prefix="evaluation")
+
+
 
         # Load the best model
         best_model_path = f"{self.log_dir}/best_model.zip"
@@ -97,9 +102,8 @@ class WandbOnTrainingEndCallback(BaseCallback):
 
         # Convert the model to ONNX format
         # Dummy input should be changed based for block runs
-        dummy_input = torch.randn(1, 4, 84, 84)  # Example input format
         torch.onnx.export(self.model.policy,  # Model's policy to export
-                          dummy_input,  # Example input for the model
+                          self.dummy_input,  # Example input for the model
                           onnx_model_path)  # Path to save the ONNX model
 
 

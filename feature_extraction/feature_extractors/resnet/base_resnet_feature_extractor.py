@@ -28,12 +28,14 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
 
     @property
     def output_dim(self):
-        dummy_input = torch.rand(1, 3, 224, 224)
+        dummy_input = torch.rand(4, 3, 224, 224)
         output = self.forward(dummy_input)
         output = self.reduce_dim(output)
         return output.shape[0], output.shape[1]
 
     def process_image(self, image_np):
+        #print shape of image_np
+        #print("Pre-proesesd image", image_np.shape)
         # Ensure image_np has no extra leading dimensions (e.g., shape (1, H, W))
         if image_np.ndim > 2 and image_np.shape[0] == 1:  # Assuming the shape is (1, H, W)
             image_np = image_np.squeeze(0)  # Now shape is (H, W)
@@ -46,6 +48,22 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         image_pil = Image.fromarray(image_np.astype('uint8'), 'RGB')  # Ensure the type is uint8 and mode is RGB
 
         return self.image_processor(image_pil).unsqueeze(0)
+
+    def process_image_stack(self, image_stack_np):
+        # Shape should be (4, 84, 84) for atari imgaes. with stack = 4
+        processed_images = []
+
+        # Iterate through each image in the batch
+        for i in range(image_stack_np.shape[0]):
+            image_np = image_stack_np[i]  # Extract the i-th grayscale image
+            # Process the image
+            processed_image = self.process_image(image_np)
+            processed_images.append(processed_image)
+
+        # Concatenate all processed images along the batch dimension to form a batch tensor
+        batch_tensor = torch.cat(processed_images, dim=0)
+
+        return batch_tensor
 
     def forward(self, x):
         with torch.no_grad():
@@ -62,9 +80,15 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         processed_image = self.process_image(image)
         feature_embeddings = self.forward(processed_image)
         reduced_dim = self.reduce_dim(feature_embeddings)
+        #print("Reduced dim", reduced_dim.shape)
         return reduced_dim
 
-
+    def extract_features_stack(self, image_stack):
+        processed_image = self.process_image_stack(image_stack) # Change if you are using a single stack/image
+        feature_embeddings = self.forward(processed_image)
+        reduced_dim = self.reduce_dim(feature_embeddings)
+        #print("Reduced dim", reduced_dim.shape)
+        return reduced_dim
 
 
 
