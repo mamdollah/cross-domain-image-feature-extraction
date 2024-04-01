@@ -31,7 +31,6 @@ class VecFeatureExtractor(VecEnvWrapper):
         Returns:
             The initial observations after preprocessing.
         """
-        print("VecFeatureExtractor reset")
         obs = self.venv.reset()
         return self.observation(obs)
 
