@@ -17,10 +17,9 @@ class WandbOnTrainingEndCallback(BaseCallback):
         self.log_dir = log_dir
         self.n_eval_episodes = n_eval_episodes
         self.record_n_episodes = record_n_episodes
-        #self.dummy_input = torch.randn(1, 4, 84, 84)  # Example input format # For benchmark
-        #self.dummy_input = torch.randn(4, 256) # Block 1, 1 stack # For block
-        self.dummy_input = torch.randn((1,) + model.observation_space.shape) # For feature extraction
-        #print("Dummy input shape:", self.dummy_input.shape)
+        # Before the torch.onnx.export call, add:
+         # Get the device from the model's parameters
+        self.dummy_input = torch.randn((1,) + model.observation_space.shape).to(model.policy.device) # For feature extraction
 
 
     def record_best_model(self):
@@ -66,7 +65,7 @@ class WandbOnTrainingEndCallback(BaseCallback):
 
         # Evaluate the model
         mean_reward, std_reward = evaluate_policy(self.model, self.eval_env, n_eval_episodes=self.n_eval_episodes)
-        print(f"Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
+        print(f"Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}, n_eval_episodes: {self.n_eval_episodes}")
 
         # Log the results to W&B
         wandb.log({"best_model/mean_reward": mean_reward, "best_model/std_reward": std_reward})
