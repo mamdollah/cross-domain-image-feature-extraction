@@ -55,4 +55,5 @@ class VecFeatureExtractor(VecEnvWrapper):
         Returns:
             The processed batch of observations after feature extraction.
         """
-        return np.array([self.feature_extractor.extract_features_stack(o) for o in obs])
+        processed_obs = [self.feature_extractor.extract_features_stack(o).cpu().numpy() for o in obs]
+        return np.array(processed_obs)

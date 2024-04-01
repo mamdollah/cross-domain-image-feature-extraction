@@ -21,6 +21,8 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
             transforms.ToTensor(),  # Convert to tensor
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize
         ])
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
     def freeze_params(self):
         for param in self.parameters():
@@ -28,7 +30,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
 
     @property
     def output_dim(self):
-        dummy_input = torch.rand(4, 3, 224, 224)
+        dummy_input = torch.rand(4, 3, 224, 224).to(self.device)
         output = self.forward(dummy_input)
         output = self.reduce_dim(output)
         return output.shape[0], output.shape[1]
@@ -63,7 +65,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         # Concatenate all processed images along the batch dimension to form a batch tensor
         batch_tensor = torch.cat(processed_images, dim=0)
 
-        return batch_tensor
+        return batch_tensor.to(self.device)
 
     def forward(self, x):
         with torch.no_grad():
@@ -81,7 +83,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         feature_embeddings = self.forward(processed_image)
         reduced_dim = self.reduce_dim(feature_embeddings)
         #print("Reduced dim", reduced_dim.shape)
-        return reduced_dim
+        return reduced_dim.cpu()
 
     def extract_features_stack(self, image_stack):
         processed_image = self.process_image_stack(image_stack) # Change if you are using a single stack/image
