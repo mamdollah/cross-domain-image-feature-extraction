@@ -24,6 +24,8 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+        self.frame_number = 0
+
     def freeze_params(self):
         for param in self.parameters():
             param.requires_grad = False
@@ -36,9 +38,16 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         return output.shape[0], output.shape[1]
 
     def process_image(self, image_np):
-        #print shape of image_np
-        #print("Pre-proesesd image", image_np.shape)
-        # Ensure image_np has no extra leading dimensions (e.g., shape (1, H, W))
+        self.frame_number += 1
+
+        if(self.frame_number % 1000 == 0 and self.frame_number < 10_000):
+            print("Processing frame number: ", self.frame_number)
+            Image.fromarray(image_np.astype('uint8')).save("preprocessed_frame_" + str(self.frame_number) + ".png")
+
+
+
+
+
         if image_np.ndim > 2 and image_np.shape[0] == 1:  # Assuming the shape is (1, H, W)
             image_np = image_np.squeeze(0)  # Now shape is (H, W)
 
@@ -48,11 +57,14 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
 
         # Convert the NumPy array to a PIL Image
         image_pil = Image.fromarray(image_np.astype('uint8'), 'RGB')  # Ensure the type is uint8 and mode is RGB
+        if(self.frame_number % 1000 == 0 and self.frame_number < 10_000):
+            image_pil.save("preprocessed_frame_pil_" + str(self.frame_number) + ".png")
 
         return self.image_processor(image_pil).unsqueeze(0)
 
     def process_image_stack(self, image_stack_np):
         # Shape should be (4, 84, 84) for atari imgaes. with stack = 4
+        (84, 84)
         processed_images = []
 
         # Iterate through each image in the batch
