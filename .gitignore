@@ -11,3 +11,5 @@ wandb/
 *.zip
 
 __pycache__/
+
+*.png
