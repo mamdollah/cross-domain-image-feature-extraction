@@ -6,9 +6,6 @@ from gymnasium import spaces
 
 from stable_baselines3.common.type_aliases import AtariResetReturn, AtariStepReturn
 
-from feature_extraction.feature_extractors.resnet.base_resnet_feature_extractor import BaseResnetFeatureExtractor
-from feature_extraction.wrappers.feature_extraction_observation_wrapper import FeatureExtractionObservationWrapper
-
 try:
     import cv2
 

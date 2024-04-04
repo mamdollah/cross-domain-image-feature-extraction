@@ -1,4 +1,8 @@
+import os
 import time
+
+import torch
+from PIL import Image
 from stable_baselines3.common.base_class import BaseAlgorithm
 from gymnasium import Env
 
@@ -12,6 +16,10 @@ from stable_baselines3.common import type_aliases
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, VecMonitor, is_vecenv_wrapped, SubprocVecEnv
 from typing import Callable
+
+from torchvision.transforms.v2 import ToPILImage
+to_pil_image = ToPILImage()
+
 
 from feature_extraction.wrappers.resnet_atari_wrapper import ResnetAtariWrapper
 
@@ -253,4 +261,71 @@ def make_resnet_atari_env(
         monitor_kwargs=monitor_kwargs,
         wrapper_kwargs=wrapper_kwargs,
     )
+
+
+def save_feature_maps(feature_maps, path, num_feature_maps=1):
+    print("Shape of feature embeddings: ", feature_maps.shape)
+    # Ensure the save directory exists
+    os.makedirs(path, exist_ok=True)
+
+    fmps = []
+    batch_size, channels, height, width = feature_maps.shape
+    for batch_index in range(batch_size):
+        for channel_index in range(0, min(channels, num_feature_maps)):
+            # Extract the single-channel image
+            single_channel_image = feature_maps[batch_index, channel_index]
+
+            # Convert the normalized single-channel image to a PIL image
+            pil_image = to_pil_image(single_channel_image.cpu())
+            fmps.append(pil_image)
+
+            # Save the PIL image
+            image_path = os.path.join(path, f"feature_map_b{batch_index}_c{channel_index}.png")
+            pil_image.save(image_path)
+
+    return fmps
+
+
+def save_np_image(image, image_name, save_path):
+    os.makedirs(save_path, exist_ok=True)
+    image_path = os.path.join(save_path, image_name)
+    # Transpose the image from (Channels, Height, Width) to (Height, Width, Channels)
+    image_transposed = np.transpose(image, (1, 2, 0))
+
+    print("Image_transposed shape: ", image_transposed.shape)
+
+    # Convert to PIL Image and save
+    pil_image = Image.fromarray(image_transposed.astype(np.uint8))  # Ensure it's uint8
+
+    pil_image.save(image_path)
+    print("Original image saved.")
+    return pil_image
+
+def save_tensor_image(tensor, image_name, save_path):
+    print("Tensor image shape: ", tensor.shape)
+    os.makedirs(save_path, exist_ok=True)
+    image_path = os.path.join(save_path, image_name)
+
+    # Ensure tensor is in CPU and convert to NumPy
+    image_np = tensor.cpu().numpy()
+
+    # Transpose from (Channels, Height, Width) to (Height, Width, Channels) and ensure RGB
+    image_transposed = np.transpose(image_np, (1, 2, 0))
+
+    # Convert to PIL Image and save
+    pil_image = Image.fromarray(image_transposed.astype(np.uint8))
+    pil_image.save(image_path)
+    print("Tensor image saved.")
+    return pil_image
+
+
+def save_reduced_feature_map(reduced_features, save_dir, output_dim):
+    op_dim = int(np.sqrt(output_dim[1]))
+    features = reduced_features.detach().cpu().numpy()
+    features = (features - features.min()) / (features.max() - features.min())
+    image_data = np.reshape(features, (op_dim, op_dim))
+    image_data_tensor = torch.tensor(image_data).float().unsqueeze(0)
+    img = to_pil_image(image_data_tensor)
+    img.save(os.path.join(save_dir, 'reduced_feature_map.png'))
+    return img
 

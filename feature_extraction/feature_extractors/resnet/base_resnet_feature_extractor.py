@@ -1,16 +1,10 @@
 import os
-
-import numpy as np
 import torch
 import torch.nn as nn
-from abc import abstractmethod
-
-from PIL import Image
-from torchinfo import torchinfo
-from torchvision.transforms import transforms
+import wandb
 from torchvision.transforms.v2 import ToPILImage
-
 from feature_extraction.feature_extractors.base_feature_extractor import BaseFeatureExtractor
+from utils import save_np_image, save_tensor_image, save_feature_maps, save_reduced_feature_map
 
 
 class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
@@ -19,6 +13,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         super(BaseFeatureExtractor, self).__init__()
         self.model = model
         self.log_dir = log_dir
+        self.log_to_wandb = log_to_wandb
         self.save_path = os.path.join(log_dir, "images")
         self.feature_embeddings_path = os.path.join(self.save_path, "feature_embeddings")
         self.original_image_name = "original_image.png"
@@ -37,7 +32,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         dummy_input = torch.rand(1, 3, 224, 224).to(self.device)
         with torch.no_grad():
             output = self.forward(dummy_input)
-            output = self.reduce_dim(output)
+            output = self.reduce_feature_map(output)
         return output.shape[0], output.shape[1]
 
 
@@ -53,88 +48,50 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         return x
 
     @staticmethod
-    def reduce_dim(features):
-        return nn.AdaptiveAvgPool2d((1, 1))(features).view(features.size(0), -1)
+    def reduce_feature_map(feature_maps):
+        return nn.AdaptiveAvgPool2d((1, 1))(feature_maps).view(feature_maps.size(0), -1)
 
-    def save_feature_embeddings(self, feature_embeddings):
-        print("Shape of feature embeddings: ", feature_embeddings.shape)
-        # Ensure the save directory exists
-        os.makedirs(self.feature_embeddings_path, exist_ok=True)
-
-        batch_size, channels, height, width = feature_embeddings.shape
-        for batch_index in range(batch_size):
-            for channel_index in range(channels):
-                # Extract the single-channel image
-                single_channel_image = feature_embeddings[batch_index, channel_index]
-
-                # Normalize the single-channel image
-                #image_min = single_channel_image.min()
-                #image_max = single_channel_image.max()
-                #normalized_image = (single_channel_image - image_min) / (image_max - image_min)
-
-                # Convert the normalized single-channel image to a PIL image
-                pil_image = self.to_pil_image(single_channel_image.cpu())
-
-                # Save the PIL image
-                image_path = os.path.join(self.feature_embeddings_path,
-                                          f"embedding_b{batch_index}_c{channel_index}.png")
-
-                pil_image.save(image_path)
-
-    def save_np_image(self, image, image_name):
-        os.makedirs(self.save_path, exist_ok=True)
-        image_path = os.path.join(self.save_path, image_name)
-        # Transpose the image from (Channels, Height, Width) to (Height, Width, Channels)
-        image_transposed = np.transpose(image, (1, 2, 0))
-
-        print("Image_transposed shape: ", image_transposed.shape)
-
-        # Convert to PIL Image and save
-        pil_image = Image.fromarray(image_transposed.astype(np.uint8))  # Ensure it's uint8
-        pil_image.save(image_path)
-        print("Original image saved.")
-
-    def save_tensor_image(self, tensor, image_name):
-        print("Tensor image shape: ", tensor.shape)
-        os.makedirs(self.save_path, exist_ok=True)
-        image_path = os.path.join(self.save_path, image_name)
-
-        # Ensure tensor is in CPU and convert to NumPy
-        image_np = tensor.cpu().numpy()
-
-        # Transpose from (Channels, Height, Width) to (Height, Width, Channels) and ensure RGB
-        image_transposed = np.transpose(image_np, (1, 2, 0))
-
-        # Convert to PIL Image and save
-        pil_image = Image.fromarray(image_transposed.astype(np.uint8))
-        pil_image.save(image_path)
-        print("Tensor image saved.")
-
+    # @staticmethod
+    # def reduce_feature_map(feature_map):
+    #     pooled_features = torch.mean(feature_map, dim=1)
+    #     flattened_features = pooled_features.view(pooled_features.size(0), -1)
+    #     return flattened_features  # shape (batch_size, height, width)
 
     def extract_features(self, image):
 
         self.frame_number += 1
         image_tensor = torch.tensor(image).unsqueeze(0).to(self.device).float()
 
-        feature_embeddings = self.forward(image_tensor)
-        reduced_dim = self.reduce_dim(feature_embeddings)
+        feature_maps = self.forward(image_tensor)
+        reduced_dim = self.reduce_feature_map(feature_maps)
 
         if self.frame_number == 100 and self.log_dir:
+            wandb_images = []
             print("Saving original image...")
-            self.save_np_image(image, self.original_image_name)
-            self.save_tensor_image(image_tensor[0], "tensor_image.png")
+            np_image = save_np_image(image, self.original_image_name, self.save_path)
+            tensor_image = save_tensor_image(image_tensor[0], "tensor_image.png", self.save_path)
+
 
             print("Saving tensor_0")
             pil_image = self.to_pil_image(image_tensor[0])
             pil_image.save(os.path.join(self.save_path, "image_tensor_0.png"))
-            # save image_tensor_0 as image
 
 
             print("Original image saved.")
 
             print("Saving feature embeddings...")
-            self.save_feature_embeddings(feature_embeddings)
+            feature_maps = save_feature_maps(feature_maps, self.feature_embeddings_path, 3)
             print("Feature embeddings saved.")
+
+            reduced_feature_map_image = save_reduced_feature_map(reduced_dim, self.save_path, self.output_dim)
+
+            if self.log_to_wandb:
+                wandb_images.append(wandb.Image(np_image, caption="original_image_np"))
+                for idx, image in enumerate(feature_maps):
+                    wandb_images.append(wandb.Image(image, caption=f"feature_map_{idx+1}"))
+                wandb_images.append(wandb.Image(reduced_feature_map_image, caption="reduced_feature_map"))
+                wandb.log({"Images": wandb_images})
+
 
 
         return reduced_dim.cpu()
