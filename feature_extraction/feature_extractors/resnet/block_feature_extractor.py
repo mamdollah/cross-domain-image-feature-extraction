@@ -4,7 +4,8 @@ from feature_extraction.feature_extractors.resnet.base_resnet_feature_extractor 
 
 
 class BlockFeatureExtractor(BaseResnetFeatureExtractor):
-    def __init__(self, model, num_blocks=3):
+    def __init__(self, model, num_blocks=3, log_dir=None, log_to_wandb=False):
+
         if num_blocks < 1 or num_blocks > 16 or not isinstance(num_blocks, int):
             raise ValueError("Number of blocks must be greater than 0.")
 
@@ -16,16 +17,5 @@ class BlockFeatureExtractor(BaseResnetFeatureExtractor):
         model = children[:4 + num_stage]
         model[-1] = model[-1][:num_blocks]
 
-        super().__init__(model)
-
-if __name__ == "__main__":
-    from torchvision.models import resnet18, resnet50, ResNet50_Weights
-
-    model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
-    feature_extractor = BlockFeatureExtractor(model, 1)
-
-    dummy_array_rand = np.random.rand(1, 84, 84)
-
-    print(feature_extractor.output_dim)
-
+        super().__init__(model, log_dir, log_to_wandb)
 

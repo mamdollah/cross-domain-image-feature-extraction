@@ -17,11 +17,13 @@ class VecFeatureExtractor(VecEnvWrapper):
     :param feature_extractor: An instance of BaseFeatureExtractor for extracting features from observations.
     """
 
-    def __init__(self, venv: VecEnv, feature_extractor: BaseFeatureExtractor):
+    def __init__(self, venv: VecEnv, feature_extractor: BaseFeatureExtractor, n_stacks: int = 1):
         super(VecFeatureExtractor, self).__init__(venv)
         self.feature_extractor = feature_extractor
+        self.n_stacks = n_stacks
+        adjusted_output_dim = (feature_extractor.output_dim[0], feature_extractor.output_dim[1] * n_stacks)
         self.observation_space = gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=feature_extractor.output_dim, dtype=np.float32
+            low=-np.inf, high=np.inf, shape=adjusted_output_dim, dtype=np.float32
         )
 
     def reset(self) -> np.ndarray:
@@ -47,13 +49,39 @@ class VecFeatureExtractor(VecEnvWrapper):
 
     def observation(self, obs: np.ndarray) -> np.ndarray:
         """
-        Apply the feature extraction process to the batch of observations.
+        Apply the feature extraction process to the batch of observations using np.split,
+        and then restack the features to form a single vector per environment.
 
         Args:
-            obs: The original batch of observations from the environments.
+            obs: The original batch of observations from the environments, shape (8, 3 * n_stacks, 224, 224).
 
         Returns:
-            The processed batch of observations after feature extraction.
+            The processed batch of observations after feature extraction, shape (8, 1, 1024).
         """
-        processed_obs = [self.feature_extractor.extract_features_stack(o).cpu().numpy() for o in obs]
-        return np.array(processed_obs)
+
+        processed_obs_all_envs = []
+        #Comments assume block 1 is used
+        #(8, 12, 224, 224)
+        # Iterate through each environment's observations
+        for env_obs in obs:
+            #(12,224,224)
+            # Use np.split to divide the 12-channel observation into 4 RGB images
+            individual_rgb_images = np.split(env_obs, self.n_stacks, axis=0)
+            #(4, 3, 224,224)
+
+            # Process each RGB image through the feature extractor
+            processed_env_obs = [self.feature_extractor.extract_features(img).cpu().numpy() for img in individual_rgb_images]
+            #(4, 1, 256)
+
+            # Concatenate the processed observations for the current environment into a single vector
+            concatenated_obs = np.concatenate(processed_env_obs, axis=-1)
+            #(1, 1024)
+
+            # Add the concatenated observations to the list
+            processed_obs_all_envs.append(concatenated_obs)
+
+        # Convert the list to a NumPy array and ensure it has the desired shape (8, 1, 1024)
+        processed_obs_all_envs = np.array(processed_obs_all_envs).reshape(len(obs), 1, -1)
+        #(8, 1, 1024)
+        return processed_obs_all_envs
+
