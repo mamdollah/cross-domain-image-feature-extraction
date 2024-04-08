@@ -291,9 +291,6 @@ def save_np_image(image, image_name, save_path):
     image_path = os.path.join(save_path, image_name)
     # Transpose the image from (Channels, Height, Width) to (Height, Width, Channels)
     image_transposed = np.transpose(image, (1, 2, 0))
-
-    print("Image_transposed shape: ", image_transposed.shape)
-
     # Convert to PIL Image and save
     pil_image = Image.fromarray(image_transposed.astype(np.uint8))  # Ensure it's uint8
 
@@ -320,12 +317,31 @@ def save_tensor_image(tensor, image_name, save_path):
 
 
 def save_reduced_feature_map(reduced_features, save_dir, output_dim):
-    op_dim = int(np.sqrt(output_dim[1]))
-    features = reduced_features.detach().cpu().numpy()
+    features = reduced_features.detach().cpu().numpy().squeeze()
+    # Normalize the features to [0, 1]
     features = (features - features.min()) / (features.max() - features.min())
-    image_data = np.reshape(features, (op_dim, op_dim))
+
+    # Calculate the dimensions of the image to be as square as possible
+    num_features = output_dim[1]
+    op_height = int(np.sqrt(num_features))
+    op_width = int(np.ceil(num_features / op_height))
+
+    # Ensure the total number of pixels matches the number of features
+    # If not perfectly square, adjust to the closest possible rectangle
+    if op_height * op_width < num_features:
+        op_height += 1
+
+    # Reshape and pad if necessary
+    padded_features = np.zeros(op_height * op_width)
+    padded_features[:num_features] = features
+    image_data = np.reshape(padded_features, (op_height, op_width))
+
+    # Convert to tensor and add a channel dimension to fit (C, H, W)
     image_data_tensor = torch.tensor(image_data).float().unsqueeze(0)
     img = to_pil_image(image_data_tensor)
+
+    # Save the image
     img.save(os.path.join(save_dir, 'reduced_feature_map.png'))
     return img
+
 
