@@ -81,16 +81,6 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
     def extract_features(self, image):
         self.frame_number += 1
 
-        if self.frame_number == 100:
-            print("Extract features --- 100 frames")
-            print("------- IMAGE PRE PROCESSING ------")
-            print("Image shape is: " + str(image.shape))
-            print("Image type is: " + str(type(image)))
-            print("Image dtype is: " + str(image.dtype))
-            print("Image max value", np.max(image))
-            print("Image min value", np.min(image))
-
-
         processed_image = self.process_image(image)
 
         image_tensor = torch.tensor(processed_image).unsqueeze(0)
@@ -99,14 +89,22 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         reduced_dim = self.reduce_feature_map(feature_maps)
 
         if self.frame_number == 100 and self.log_dir:
-            print("------- IMAGE POST PROCESSING ------")
+            print(f"------- IMAGE PRE PROCESSING FOR FRAME NUMBER {self.frame_number} ------")
             print("Image shape is: " + str(image.shape))
             print("Image type is: " + str(type(image)))
             print("Image dtype is: " + str(image.dtype))
             print("Image max value", np.max(image))
             print("Image min value", np.min(image))
 
+            print("------- IMAGE POST PROCESSING ------")
+            print("Image shape is: " + str(processed_image.shape))
+            print("Image type is: " + str(type(processed_image)))
+            print("Image dtype is: " + str(processed_image.dtype))
+            print("Image max value", np.max(processed_image))
+            print("Image min value", np.min(processed_image))
 
+
+            print("------- SAVING IMAGES LOCALLY ------")
 
             wandb_images = []
             print("Saving original image...")
@@ -121,15 +119,20 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
             feature_maps = save_feature_maps(feature_maps, self.feature_embeddings_path, 3)
             print("Feature embeddings saved.")
 
+            print("------- IMAGES SAVED LOCALLY -------")
+
             reduced_feature_map_image = save_reduced_feature_map(reduced_dim, self.save_path, self.output_dim)
 
             if self.log_to_wandb:
+                print("------- SAVING IMAGES TO WANDB -------")
                 wandb_images.append(wandb.Image(np_image, caption="original_image"))
                 wandb_images.append(wandb.Image(processed_image, caption="processed_image"))
                 for idx, image in enumerate(feature_maps):
                     wandb_images.append(wandb.Image(image, caption=f"feature_map_{idx+1}"))
                 wandb_images.append(wandb.Image(reduced_feature_map_image, caption="reduced_feature_map"))
                 wandb.log({"Images": wandb_images})
+                print("------- IMAGES SAVED TO WANDB -------")
+
 
 
 
