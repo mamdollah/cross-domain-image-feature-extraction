@@ -27,5 +27,5 @@ As this research is ongoing, we aim to regularly update this repository with our
 
 For further inquiries or contributions, please feel free to contact:
 
-- Mamdollah Amini - [mamdollah.amini@email.com](mailto:mamdollah.amini@email.com)
-- Adi Creson - [adi.creson@email.com](mailto:adi.creson@email.com)
+- Mamdollah Amini - [mamdollah@gmail.com](mailto:mamdollah@gmail.com)
+- Adi Creson - [adi@creson.com](mailto:adi@creson.com)
