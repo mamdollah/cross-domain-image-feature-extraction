@@ -81,7 +81,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
     def extract_features(self, image):
         self.frame_number += 1
 
-        processed_image = self.process_image(image)
+        processed_image = image #self.process_image(image)
 
         image_tensor = torch.tensor(processed_image).unsqueeze(0)
 
