@@ -20,9 +20,7 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev
 
 # Copy the rest of project code into the container
-COPY experiments .
-COPY feature_extraction .
-COPY utils.py .
+COPY . .
 
 # Set environment variables, if needed
 # ENV MY_VARIABLE=my_value
