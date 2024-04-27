@@ -216,10 +216,10 @@ for block_nbr in block_nbrs:
     runs.append((f"breakout_block{block_nbr}_avg", block_nbr))
 
 for run_name, block_nbr in runs:
+    project_name = "ablation_study"
+    
     timestamp = datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S')
-
-    project_name = "experiments_latest"
-    run_name = run_name + timestamp
+    run_name = run_name + " no_processing" + timestamp
 
     new_config = create_config(project_name, run_name, block_nbr)
     configs.append(new_config)
