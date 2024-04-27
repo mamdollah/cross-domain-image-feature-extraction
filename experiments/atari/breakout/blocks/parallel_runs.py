@@ -24,7 +24,7 @@ if os.path.exists(wandb_api_key_file):
     with open(wandb_api_key_file) as f:
         wandb_api_key = f.read().strip()
 
-    # Set the WandB API key
+    # Save the WandB API key as an environment variable
     os.environ["WANDB_API_KEY"] = wandb_api_key
 
 
