@@ -1,0 +1,7 @@
+.github/
+archive/
+tests/
+venv/
+.gitignore/
+README.md
+requirements_old.txt

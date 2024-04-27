@@ -2,7 +2,7 @@ import datetime
 import multiprocessing
 import random
 import time
-
+import os
 import torch
 import wandb
 from stable_baselines3 import PPO
@@ -17,6 +17,15 @@ from utils import linear_schedule, make_resnet_atari_env
 from collections import OrderedDict
 
 from torchvision.models import ResNet50_Weights, resnet50
+
+# Read the WandB API key from the file
+wandb_api_key_file = 'WANDB_API_KEY_FILE.txt'
+if os.path.exists(wandb_api_key_file):
+    with open(wandb_api_key_file) as f:
+        wandb_api_key = f.read().strip()
+
+    # Set the WandB API key
+    os.environ["WANDB_API_KEY"] = wandb_api_key
 
 
 def create_config(project_name, run_name, block_nbr):
@@ -69,7 +78,7 @@ def create_config(project_name, run_name, block_nbr):
         # Evaluation and logging settings
         ('n_eval_episodes', 5),
         ('record_n_episodes', 10),
-        ('n_final_eval_episodes', 5),#25
+        ('n_final_eval_episodes', 25),
         ('log_frequency', 50_000),
 
         # Other settings
@@ -200,7 +209,7 @@ def run_experiments_in_parallel(config_list):
 
 configs = []
 
-block_nbrs = [3]
+block_nbrs = [16]
 runs = []
 
 for block_nbr in block_nbrs:

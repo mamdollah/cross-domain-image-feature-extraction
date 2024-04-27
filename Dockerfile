@@ -1,28 +1,29 @@
 # Base image
-FROM pytorch/pytorch:latest
+FROM pytorch/pytorch
 
 LABEL org.opencontainers.image.source = "https://github.com/mamdollah/cross-domain-image-feature-extraction"
+
+# Install OpenGL library
+RUN apt-get update && apt-get install -y \ 
+	libgl1-mesa-glx \
+        libglib2.0-0 \
+        libsm6 \
+        libxrender1 \
+        libxext6 \
+        && rm -rf /var/lib/apt/lists/*
 
 # working directory in the container
 WORKDIR /app
 
+ENV PYTHONPATH "${PYTHONPATH}:/app"
+
 # Copy the requirements file into the container
 COPY requirements.txt .
-# Copy the rest of project code into the container
-COPY experiments .
-COPY feature_extraction .
-COPY utils.py .
-
-COPY .github .
-COPY .gitignore .
-COPY Dockerfile .
 
 # Install any needed dependencies specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt && rm requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install additional packages for OpenAI Gym (assuming you're using it for RL)
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libsm6 \
-    libxext6 \
-    libxrender-dev
+# Copy the rest of project code into the container
+COPY . /app
+
+CMD ["python3", "experiments/atari/breakout/blocks/parallel_runs.py"]
