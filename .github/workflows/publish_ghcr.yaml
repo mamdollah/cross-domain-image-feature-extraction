@@ -2,18 +2,24 @@ name: Docker Image CI for GHCR
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      manual_input:
+        description: 'Input description'
+        required: false
 
 jobs:
-    build_and_publish_image:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout the repository
-            uses: actions/checkout@v3
+  build_and_publish_image:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'docker-build')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
 
-          - name: Build and push the image
-            run: |
-              docker login --username ${{ secrets.GHCR_USERNAME }} --password ${{ secrets.GHCR_TOKEN }} ghcr.io
-              docker build . -t ghcr.io/${{ secrets.GHCR_USERNAME }}/cross-domain-image-feature-extraction:latest
-              docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/cross-domain-image-feature-extraction:latest
+      - name: Build and push the image
+        run: |
+          docker login --username ${{ secrets.GHCR_USERNAME }} --password ${{ secrets.GHCR_TOKEN }} ghcr.io
+          docker build . -t ghcr.io/${{ secrets.GHCR_USERNAME }}/cross-domain-image-feature-extraction:latest
+          docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/cross-domain-image-feature-extraction:latest
