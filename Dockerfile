@@ -8,6 +8,14 @@ WORKDIR /app
 
 # Copy the requirements file into the container
 COPY requirements.txt .
+# Copy the rest of project code into the container
+COPY experiments .
+COPY feature_extraction .
+COPY utils.py .
+
+COPY .github .
+COPY .gitignore .
+COPY Dockerfile .
 
 # Install any needed dependencies specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && rm requirements.txt
@@ -18,12 +26,3 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender-dev
-
-# Copy the rest of project code into the container
-COPY . .
-
-# Set environment variables, if needed
-# ENV MY_VARIABLE=my_value
-
-# Command to run the training script
-CMD ["python", "experiments/atari/breakout/blocks/parallel_runs.py"]

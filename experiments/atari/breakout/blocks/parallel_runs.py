@@ -69,7 +69,7 @@ def create_config(project_name, run_name, block_nbr):
         # Evaluation and logging settings
         ('n_eval_episodes', 5),
         ('record_n_episodes', 10),
-        ('n_final_eval_episodes', 25),
+        ('n_final_eval_episodes', 5),#25
         ('log_frequency', 50_000),
 
         # Other settings
@@ -200,7 +200,7 @@ def run_experiments_in_parallel(config_list):
 
 configs = []
 
-block_nbrs = [16]
+block_nbrs = [3]
 runs = []
 
 for block_nbr in block_nbrs:
