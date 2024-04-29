@@ -18,7 +18,7 @@ project_name = "ablation_study"
 #Human readable timestamp
 timestamp = datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S')
 
-run_name = "experiment2" + timestamp
+run_name = "experiment1" + timestamp
 log_dir = "logs"
 
 wandb.login()
@@ -77,14 +77,14 @@ config = wandb.config
 
 from utils import make_custom_atari_wrapper
 
-vec_eval_env = make_custom_atari_wrapper(config.env_id, n_envs=config.n_envs, seed=config.evaluation_seed)
+vec_eval_env = make_atari_env(config.env_id, n_envs=config.n_envs, seed=config.evaluation_seed)
 
 vec_eval_env = VecFrameStack(vec_eval_env, n_stack=config.frame_stack)
 vec_eval_env = VecTransposeImage(vec_eval_env)
 
 # # Create Training Environment
 
-vec_train_env = make_custom_atari_wrapper(config.env_id, n_envs=config.n_envs, seed=config.training_seed)
+vec_train_env = make_atari_env(config.env_id, n_envs=config.n_envs, seed=config.training_seed)
 vec_train_env = VecFrameStack(vec_train_env, n_stack=config.frame_stack)
 vec_train_env = VecTransposeImage(vec_train_env)
 

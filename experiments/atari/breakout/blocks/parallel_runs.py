@@ -2,7 +2,7 @@ import datetime
 import multiprocessing
 import random
 import time
-import os
+
 import torch
 import wandb
 from stable_baselines3 import PPO
@@ -17,15 +17,6 @@ from utils import linear_schedule, make_resnet_atari_env
 from collections import OrderedDict
 
 from torchvision.models import ResNet50_Weights, resnet50
-
-# Read the WandB API key from the file
-wandb_api_key_file = 'WANDB_API_KEY_FILE.txt'
-if os.path.exists(wandb_api_key_file):
-    with open(wandb_api_key_file) as f:
-        wandb_api_key = f.read().strip()
-
-    # Save the WandB API key as an environment variable
-    os.environ["WANDB_API_KEY"] = wandb_api_key
 
 
 def create_config(project_name, run_name, block_nbr):
@@ -216,11 +207,10 @@ for block_nbr in block_nbrs:
     runs.append((f"breakout_block{block_nbr}_avg", block_nbr))
 
 for run_name, block_nbr in runs:
-    project_name = "ablation_study"
-    
     timestamp = datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S')
-    run_name = run_name + " no_processing" + timestamp
 
+    project_name = "ablation_study"
+    run_name = "exp-7-skolan" + timestamp
     new_config = create_config(project_name, run_name, block_nbr)
     configs.append(new_config)
 

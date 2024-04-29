@@ -242,6 +242,11 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
         :return: the observation
         """
         assert cv2 is not None, "OpenCV is not installed, you can do `pip install opencv-python`"
+
+        #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        #print("RBG2GRAY SHAPE", frame.shape)
+        #frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+        #print("RBG2RGB SHAPE", frame.shape)
         frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
         return frame
 

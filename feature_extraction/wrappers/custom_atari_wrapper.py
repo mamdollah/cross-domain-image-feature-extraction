@@ -248,8 +248,8 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
         assert cv2 is not None, "OpenCV is not installed, you can do `pip install opencv-python`"
 
         # Increment frame count
-        self.frame_count += 1
-
+        # self.frame_count += 1
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         # Resize frame
         resized_frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
         """
@@ -262,9 +262,9 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
             wandb.log({"images": wandb_images})
 
         """
-
-        return resized_frame
-
+        
+        return frame[:,:,None]
+        
 
 
 class CustomAtariWrapper(gym.Wrapper[np.ndarray, int, np.ndarray, int]):

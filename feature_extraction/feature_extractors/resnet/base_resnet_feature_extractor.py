@@ -66,7 +66,7 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
         image = image.transpose((1, 2, 0))
 
         # Resize the image
-        image = cv2.resize(image, (self.input_width, self.input_height), interpolation=cv2.INTER_LINEAR)
+        #image = cv2.resize(image, (self.input_width, self.input_height), interpolation=cv2.INTER_LINEAR)
 
         # Normalize the image
         image = image / 255.0
@@ -81,7 +81,8 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
     def extract_features(self, image):
         self.frame_number += 1
 
-        processed_image = image #self.process_image(image)
+        processed_image = image# self.process_image(image)
+        #processed_image = image
 
         image_tensor = torch.tensor(processed_image).unsqueeze(0)
 
@@ -132,8 +133,5 @@ class BaseResnetFeatureExtractor(BaseFeatureExtractor, nn.Module):
                 wandb_images.append(wandb.Image(reduced_feature_map_image, caption="reduced_feature_map"))
                 wandb.log({"Images": wandb_images})
                 print("------- IMAGES SAVED TO WANDB -------")
-
-
-
 
         return reduced_dim.cpu()
