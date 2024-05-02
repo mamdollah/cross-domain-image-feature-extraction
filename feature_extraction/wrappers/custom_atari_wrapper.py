@@ -249,7 +249,7 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
 
         # Increment frame count
         # self.frame_count += 1
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         # Resize frame
         resized_frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
         """
@@ -303,7 +303,7 @@ class CustomAtariWrapper(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
         env: gym.Env,
         noop_max: int = 30,
         frame_skip: int = 4,
-        screen_size: int = 84,
+        screen_size: int = 224,
         terminal_on_life_loss: bool = True,
         clip_reward: bool = True,
         action_repeat_probability: float = 0.0,
