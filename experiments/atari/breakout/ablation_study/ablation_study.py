@@ -17,7 +17,7 @@ project_name = "ablation_study"
 #Human readable timestamp
 timestamp = datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S')
 
-run_name = "RGB_224x224_no_processing" + timestamp
+run_name = "RGB_224x224_no_resnet_processing" + timestamp
 log_dir = "logs"
 
 wandb.login()
