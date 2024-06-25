@@ -19,9 +19,10 @@ Our research investigates the potential of using ResNet50, a network originally 
 Ensure you have all the necessary packages by installing them from the provided `requirements.txt` file:
 pip install -r requirements.txt
 
-## Ongoing Research
+## Thesis
 
-As this research is ongoing, we aim to regularly update this repository with our latest findings modifications to our methodology.
+The research project is part of our master's thesis, and the final thesis document is available in the `thesis` directory, and through the following link: [Cross-Domain Generalizability in Image Feature Extraction](thesis/cross-domain-generalizability-in-image-feature-extraction.pdf)
+
 
 ## Contact Information
 
