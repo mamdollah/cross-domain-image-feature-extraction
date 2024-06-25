@@ -23,7 +23,7 @@ class VecFeatureExtractor(VecEnvWrapper):
         self.n_stacks = n_stacks
         adjusted_output_dim = (feature_extractor.output_dim[0], feature_extractor.output_dim[1] * n_stacks)
         self.observation_space = gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=adjusted_output_dim, dtype=np.float32
+            low=0.0, high=1.0, shape=adjusted_output_dim, dtype=np.float16
         )
 
     def reset(self) -> np.ndarray:

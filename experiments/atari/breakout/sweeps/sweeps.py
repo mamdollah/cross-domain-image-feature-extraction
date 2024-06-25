@@ -2,9 +2,9 @@ import datetime
 import multiprocessing
 import random
 import time
+import argparse
 
 import torch
-import wandb
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CallbackList, EvalCallback
 from stable_baselines3.common.env_util import make_atari_env
@@ -14,71 +14,56 @@ from feature_extraction.callbacks.wandb_on_training_end_callback import WandbOnT
 from feature_extraction.feature_extractors.resnet.block_feature_extractor import BlockFeatureExtractor
 from feature_extraction.wrappers.vec_feature_extractor import VecFeatureExtractor
 from utils import linear_schedule, make_resnet_atari_env
-from collections import OrderedDict
 
 from torchvision.models import ResNet50_Weights, resnet50
-from experiments.atari.breakout.blocks.resnet_feature_extractor import ResNetFeatureExtractor
+import wandb
+import sys
 
+# Function to parse command line arguments
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run PPO experiments with dynamic configurations.")
+    parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--clip_range', type=float)
+    parser.add_argument('--ent_coef', type=float)
+    parser.add_argument('--learning_rate', type=float)
+    parser.add_argument('--n_epochs', type=int)
+    parser.add_argument('--n_steps', type=int)
+    parser.add_argument('--normalize_advantage', type=lambda x: (str(x).lower() == 'true'))
+    parser.add_argument('--vf_coef', type=float)
+    return parser.parse_args()
 
-def create_config(project_name, run_name, block_nbr):
-    """
-    Creates a new configuration as an OrderedDict with a specified project and run name,
-    and sets the training_seed and evaluation_seed to random integers,
-    while using a predefined set of default settings for the rest.
-
-    Parameters:
-    - project_name (str): Name of the project.
-    - run_name (str): Name of the run.
-
-    Returns:
-    - OrderedDict: A new configuration dictionary with the specified project and run names,
-                   random seeds, and default settings for other parameters.
-    """
-    training_seed = random.randint(0, 9999)  # Should later on be same for all experiments to ensure comparability
-    evaluation_seed = random.randint(0, 9999)  # Should later on be same for all experiments to ensure comparability
-
-    default_config = OrderedDict([
-        # Environment settings
-        ('project_name', project_name),
-        ('run_name', run_name),
-        ('env_id', "BreakoutNoFrameskip-v4"),
-        ('n_envs', 8),
-        ('env_wrapper', ['stable_baselines3.common.atari_wrappers.AtariWrapper']),
-        ('frame_stack', 4),
-        ('training_seed', 12),
-        ('evaluation_seed', 14),
-
-        # Algorithm and policy settings
-        ('algo', 'PPO'),
-        ('policy', 'MlpPolicy'),
-
-        # Training hyperparameters
-        ('batch_size', 280),
-        ('n_steps', 80),
-        ('n_epochs', 3),
-        ('n_timesteps', 10_000_000),
-        ('learning_rate', 0.002513),
-        ('learning_rate_schedule', 'linear'),
-        ('clip_range', 0.3329),
-        ('clip_range_schedule', 'linear'),
-        ('ent_coef', 0.00207),
-        ('vf_coef', 0.5818),
-        ('normalize_advantage', True),
-
-        # Resnet
-        ('block_nbr', block_nbr),
-        # Evaluation and logging settings
-        ('n_eval_episodes', 5),
-        ('record_n_episodes', 10),
-        ('n_final_eval_episodes', 25),
-        ('log_frequency', 50_000),
-
-        # Other settings
-        ('verbose', 0)
-    ])
-
-    return default_config
-
+# Function to create a configuration based on parsed arguments
+def create_config_from_args(args):
+    project_name = "ablation_study_sweep"
+    run_name = "block16_sweep" + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    config = {
+        'project_name': project_name,
+        'run_name': run_name,
+        'env_id': "BreakoutNoFrameskip-v4",
+        'n_envs': 8,
+        'env_wrapper': ['stable_baselines3.common.atari_wrappers.AtariWrapper'],
+        'frame_stack': 4,
+        'training_seed': 12,
+        'evaluation_seed': 14,
+        'algo': 'PPO',
+        'policy': 'MlpPolicy',
+        'batch_size': args.batch_size,
+        'n_steps': args.n_steps,
+        'n_epochs': args.n_epochs,
+        'n_timesteps': 1_000_000,
+        'learning_rate': args.learning_rate,
+        'clip_range': args.clip_range,
+        'ent_coef': args.ent_coef,
+        'vf_coef': args.vf_coef,
+        'normalize_advantage': args.normalize_advantage,
+        'n_eval_episodes': 10,
+        'record_n_episodes': 10,
+        'n_final_eval_episodes': 20,
+        'log_frequency': 25_000,
+        'verbose': 0,
+        'block_nbr': 16  # Example value, modify as needed
+    }
+    return config
 
 def run_experiment(config):
     wandb.login()
@@ -99,7 +84,7 @@ def run_experiment(config):
     print("Device: ", device)
     model.to(device)
     feature_extractor = BlockFeatureExtractor(model, config.block_nbr, log_dir, log_to_wandb=True)
-    
+
     # Create Evaluation Environment
     vec_eval_env = make_resnet_atari_env(
         config.env_id,
@@ -140,8 +125,8 @@ def run_experiment(config):
     ppo_hyperparams = {key: config[key] for key in ppo_params_keys if key in config}
 
     # Additional hyperparameters not in the initial filter that require custom handling
-    learning_rate_schedule = linear_schedule(2.5e-4)
-    clip_range_schedule = linear_schedule(0.1)
+    learning_rate_schedule = linear_schedule(config.learning_rate)
+    clip_range_schedule = linear_schedule(config.clip_range)
 
     # Instantiate the PPO model with the specified hyperparameters and environment
     model = PPO(
@@ -187,33 +172,11 @@ def run_experiment(config):
 
     wandb.finish()
 
-def run_experiments_in_parallel(config_list):
-    processes = []
-    for config in config_list:
-        p = multiprocessing.Process(target=run_experiment, args=(config,))
-        p.start()
-        processes.append(p)
-        time.sleep(60)  # Sleep to avoid file write conflicts
-
-    for p in processes:
-        p.join()
-
-
-configs = []
-
-block_nbrs = [16,13,7,3]
-runs = []
-
-for block_nbr in block_nbrs:
-    runs.append((f"block_{block_nbr}_sweep_hyperparam", block_nbr))
-
-for run_name, block_nbr in runs:
-    timestamp = datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S')
-
-    project_name = "ablation_study"
-    new_config = create_config(project_name, run_name, block_nbr)
-    configs.append(new_config)
-
-# Run experiments in sequentially
-for config in configs:
+# Main function that uses the parsed arguments to run experiments
+def main():
+    args = parse_args()
+    config = create_config_from_args(args)
     run_experiment(config)
+
+if __name__ == "__main__":
+    main()

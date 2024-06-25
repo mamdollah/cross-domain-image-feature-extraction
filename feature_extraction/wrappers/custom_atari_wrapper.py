@@ -231,7 +231,7 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
 
         self.observation_space = spaces.Box(
             low=0,
-            high=255,
+            high=255    ,
             shape=(self.height, self.width, 3),
             dtype=env.observation_space.dtype,  # type: ignore[arg-type]
         )
@@ -251,7 +251,8 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
         # self.frame_count += 1
         # frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         # Resize frame
-        resized_frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+
+        image = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
         """
         if self.frame_count == 100:
             print(f"WarpFrame frame count: {self.frame_count}")
@@ -262,8 +263,21 @@ class WarpFrame(gym.ObservationWrapper[np.ndarray, int, np.ndarray]):
             wandb.log({"images": wandb_images})
 
         """
-        
-        return frame[:,:,None]
+        #image = frame.transpose((1, 2, 0))
+
+        # Resize the image
+        #image = cv2.resize(image, (self.input_width, self.input_height), interpolation=cv2.INTER_LINEAR)
+
+        # Normalize the image
+        #image = image / 255.0
+        #image -= np.array([0.485, 0.456, 0.406])#.reshape(1, 1, 3)
+        #image /= np.array([0.229, 0.224, 0.225])#.reshape(1, 1, 3)
+
+        # If needed, transpose back to (channels, height, width) for PyTorch or similar frameworks
+        #image = image.transpose((2, 0, 1))
+
+        return image 
+        #return resized_frame
         
 
 
